@@ -20,12 +20,12 @@ data ALine = LCommand Command | LComment Comment | Blank deriving (Show)
 
 data Comment = Comment String deriving (Show)
 
-data Dest = M | D | MD | A | AM | AD | AMD deriving (Show)
-data Comp = Zero | One | MinusOne | CompD | CompA | NotD | NotA | MinusD 
-            | MinusA | DPlusOne | APlusOne | DMinusOne | AMinusOne 
-            | DPlusA | DMinusA | AMinusD | DAndA | DOrA 
+data Dest = DNull | M | D | MD | A | AM | AD | AMD deriving (Show)
+data Comp = Zero | One | MinusOne | CompD | CompA | CompM | NotD | NotA | NotM | MinusD 
+            | MinusA | MinusM | DPlusOne | APlusOne | MPlusOne | DMinusOne | AMinusOne | MMinusOne 
+            | DPlusA | DPlusM | DMinusA | DMinusM | AMinusD | MMinusD | DAndA | DAndM | DOrA | DOrM 
             deriving (Show)
-data Jump = JGT | JEQ | JGE | JLT | JNE | JLE | JMP deriving (Show)
+data Jump = JNull | JGT | JEQ | JGE | JLT | JNE | JLE | JMP deriving (Show)
 
 
 -- commandType :: String -> Command
@@ -56,30 +56,30 @@ parseComp = do
     P.<|> string "1" *> pure One
     P.<|> (P.try $ string "-1" *> pure MinusOne)
     P.<|> (P.try $ string "!D" *> pure NotD)
-    P.<|> string "!A" *> pure NotA
-    P.<|> string "!M" *> pure NotA
+    P.<|> (P.try $ string "!A" *> pure NotA)
+    P.<|> string "!M" *> pure NotM
     P.<|> (P.try $ string "-D" *> pure MinusD)
-    P.<|> string "-A" *> pure MinusA
-    P.<|> string "-M" *> pure MinusA
+    P.<|> (P.try $ string "-A" *> pure MinusA)
+    P.<|> string "-M" *> pure MinusM
     P.<|> (P.try $ string "D+1" *> pure DPlusOne)
     P.<|> (P.try $ string "A+1" *> pure APlusOne)
-    P.<|> (P.try $ string "M+1" *> pure APlusOne)
+    P.<|> (P.try $ string "M+1" *> pure MPlusOne)
     P.<|> (P.try $ string "D-1" *> pure DMinusOne)
     P.<|> (P.try $ string "A-1" *> pure AMinusOne)
-    P.<|> (P.try $ string "M-1" *> pure AMinusOne)
+    P.<|> (P.try $ string "M-1" *> pure MMinusOne)
     P.<|> (P.try $ string "D+A" *> pure DPlusA)
-    P.<|> (P.try $ string "D+M" *> pure DPlusA)
+    P.<|> (P.try $ string "D+M" *> pure DPlusM)
     P.<|> (P.try $ string "D-A" *> pure DMinusA)
-    P.<|> (P.try $ string "D-M" *> pure DMinusA)
+    P.<|> (P.try $ string "D-M" *> pure DMinusM)
     P.<|> (P.try $ string "A-D" *> pure AMinusD)
-    P.<|> (P.try $ string "M-D" *> pure AMinusD)
+    P.<|> (P.try $ string "M-D" *> pure MMinusD)
     P.<|> (P.try $ string "D&A" *> pure DAndA)
-    P.<|> (P.try $ string "D&M" *> pure DAndA)
+    P.<|> (P.try $ string "D&M" *> pure DAndM)
     P.<|> (P.try $ string "D|A" *> pure DOrA)
-    P.<|> (P.try $ string "D|M" *> pure DOrA)
+    P.<|> (P.try $ string "D|M" *> pure DOrM)
     P.<|> (P.try $ string "D" *> pure CompD)
     P.<|> (P.try $ string "A" *> pure CompA)
-    P.<|> (P.try $ string "M" *> pure CompA)
+    P.<|> (P.try $ string "M" *> pure CompM)
 
 parseJump :: ParsecT String u Identity Jump
 parseJump = do
