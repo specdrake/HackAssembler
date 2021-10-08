@@ -7,7 +7,8 @@ import System.Environment (getArgs, getProgName)
 import System.Exit (die)
 import qualified Data.Text as T
 import Data.Text (strip) 
-import Parser as P
+import Parser as P ( runParseLine )
+import Code as C
 
 -- initializes the I/O files and drives the process
 main :: IO ()
@@ -16,57 +17,41 @@ main = do
     progName <- getProgName
     -- check correct command line usage
     when (length args /= 1) $ do
-        die $ "Usage: " ++ progName ++ "name.asm"
+        die $ "Usage: " ++ progName ++ " <filepath>"
 
     -- mapM_ putStrLn args
-
-    inpFile <- openFile ("testfiles/" ++ head args) ReadMode
+    let inpFilePath = head args
+    inpFile <- openFile inpFilePath ReadMode
     contents <- hGetContents inpFile
     -- let output = foldl (\out instr -> (parseInstr instr) : out) [] (lines contents) 
 
-    let output = foldl (\out instr -> out ++ [(P.runParseLine instr)] ) [] (lines contents) 
+    let output = foldl (\out instr -> out ++ [P.runParseLine instr] ) [] (lines contents) 
+    let outFilePath = if length inpFilePath > 4 && (drop (length inpFilePath - 4)) inpFilePath == ".asm"
+                      then (take (length inpFilePath - 4)) inpFilePath ++ ".out"
+                      else inpFilePath ++ ".out"
+    writeFile outFilePath ""
     mapM_ (\y -> 
         case y of
-            Right x -> putStrLn (show x) 
+            (Right line) -> let
+                                val = C.codeGenLine line  
+                            in
+                                if val == "" 
+                                then return ()
+                                else appendFile outFilePath (val++"\n")
             _ -> die $ "Error: parseError") output
+
+    putStrLn $ "Written to: " ++ outFilePath
     -- inp <- getLine
     -- let res = if head inp == '@' then aInstrToBin (tail inp) else inp
     -- putStrLn res
 
-parseInstr :: String -> String
-parseInstr "" = ""
-parseInstr _instr = 
-    let 
-        instr = T.unpack $ T.strip (T.pack _instr)
-    in
-        if head instr == '@' 
-        then aInstrToBin (tail instr)
-        else ""
-
-aInstrToBin :: String -> String
-aInstrToBin aInstr = '0' : padZeroes 16 (decToBin aInstr)
-
--- converts a decimal string to binary
-decToBin :: String -> String
-decToBin dec = 
-    let
-        dec_int = read dec :: Integer 
-        bin = toBin dec_int "" 
-        toBin n str = 
-            if n <= 0 
-            then str 
-            else toBin (n `div` 2) $ (
-                if n `mod` 2 == 1 
-                then '1'    
-                else '0') : str
-    in 
-        bin
-
--- pad zeroes to make the result of a certain length
-padZeroes :: Int -> String -> String
-padZeroes n str = 
-    if length str < n
-    then replicate (n - length str) '0' ++ str
-    else str
-    
+-- parseInstr :: String -> String
+-- parseInstr "" = ""
+-- parseInstr _instr = 
+--     let 
+--         instr = T.unpack $ T.strip (T.pack _instr)
+--     in
+--         if head instr == '@' 
+--         then aInstrToBin (tail instr)
+--         else ""
 
