@@ -171,9 +171,9 @@ eol = P.try (string "\n\r")
 
 parseBlank :: Parser ALine 
 parseBlank = do
-    P.optional whitespace
+    whitespace
     P.optional eol
-    P.optional eof
+    eof
     return Blank
 
 parseLine :: P.Parser ALine
