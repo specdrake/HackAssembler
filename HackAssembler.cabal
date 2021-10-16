@@ -27,6 +27,7 @@ executable HackAssembler
     -- Modules included in this executable, other than Main.
     other-modules:   Parser
                     ,Code
+                    ,SymbolTable
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -34,5 +35,6 @@ executable HackAssembler
                     , text
                     , parsec
                     , mtl
+                    , containers
     hs-source-dirs:   app
     default-language: Haskell2010
