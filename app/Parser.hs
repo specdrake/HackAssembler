@@ -7,7 +7,9 @@ import qualified Data.Text as T
 import Data.Text (strip) 
 import Text.ParserCombinators.Parsec as P
 import Text.Parsec
+import qualified SymbolTable as ST
 
+data Symbol = Variable String | Label String deriving (Show)
 
 type AInstr = String
 
@@ -16,7 +18,7 @@ data CInstr= OnlyComp Comp | CompJump Comp Jump | DestComp Dest Comp | Full Dest
 
 data Command = AComm AInstr | CComm CInstr  deriving (Show)
 
-data ALine = LCommand Command | LComment Comment | Blank deriving (Show)
+data ALine = LCommand Command | LComment Comment | Blank | LSymbol Symbol deriving (Show)
 
 data Comment = Comment String deriving (Show)
 
@@ -36,6 +38,20 @@ data Jump = JNull | JGT | JEQ | JGE | JLT | JNE | JLE | JMP deriving (Show)
 --         if head instr == '@' 
 --         then A_Command
 --         else C_Command
+
+parseSymbol :: ParsecT String () Identity Symbol
+parseSymbol = do
+    P.try $ (do
+        whitespace
+        char '@'
+        str <- P.manyTill P.anyChar ((P.try eol) P.<|> (P.try $ P.string " "))
+        return (Variable str))
+    P.<|> (do
+        whitespace
+        char '('
+        str <- P.manyTill P.anyChar (char ')')
+        return (Label str))
+
 
 whitespace :: Parser ()
 whitespace = void $ P.many $ oneOf " \n\t"
@@ -186,6 +202,10 @@ parseLine = do
         return $ LCommand comm)
     P.<|> (P.try $ do
         parseBlank)
+    P.<|> (P.try $ do
+        symb <- parseSymbol
+        return $ LSymbol symb)
+
 
 runParseLine :: String -> Either ParseError ALine
 runParseLine line = do
