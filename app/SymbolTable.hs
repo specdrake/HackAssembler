@@ -17,11 +17,14 @@ isPredef str =
 
 isLabel :: String -> Bool
 isLabel "" = False
-isLabel str = (not (isPredef str)) && (isUpper (head str)) 
+isLabel str = length str > 2 && (not (isPredef str)) && (head str == '(') && (isUpper . head  $ (tail str)) && (last str == ')')
 
 isVar :: String -> Bool
 isVar "" = False
 isVar str = not $ (isPredef str) || (isLabel str)
+
+isSymbol :: String -> Bool
+isSymbol str = isLabel str || isVar str
 
 
 initST :: M.Map String Integer 
